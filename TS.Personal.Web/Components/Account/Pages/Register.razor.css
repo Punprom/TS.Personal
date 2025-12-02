@@ -1,0 +1,16 @@
+﻿.lbcss {
+    font-family: Cambria, Cochin, Georgia, Times, Times New Roman, serif;
+    font-size: smaller;
+    font-style: italic;
+}
+
+/* Scoped h2 styling for the Register component */
+h2 {
+    font-family: Cambria, Cochin, Georgia, Times, Times New Roman, serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.2;
+    margin: 0 0 0.5rem 0;
+    color: #2b2b2b;
+}
+

@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="TS.Personal.Core/TS.Personal.Core.csproj" />
+  <Project Path="TS.Personal.Web/TS.Personal.Web.csproj" />
+</Solution>

@@ -1,0 +1,222 @@
+﻿@page "/Account/Register"
+@rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using System.Text
+@using System.Text.Encodings.Web
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+@using TS.Personal.Web.Data
+@using TS.Personal.Web.Models
+@using Microsoft.AspNetCore.Components.Forms
+
+@inject UserManager<ApplicationUser> UserManager
+@inject IUserStore<ApplicationUser> UserStore
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IEmailSender<ApplicationUser> EmailSender
+@inject ILogger<Register> Logger
+@inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
+
+
+<PageTitle>Register</PageTitle>
+
+<h2>Register New Account</h2>
+
+<div class="row">
+    <div class="col-lg-6">
+        <StatusMessage Message="@Message" />
+        <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" 
+                FormName="register">
+            <DataAnnotationsValidator />
+            
+            <div class="mb-4" />
+            
+            <ValidationSummary class="text-danger" role="alert" />
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.Email" id="Input.Email" class="form-control" autocomplete="username" 
+                        aria-required="true" placeholder="" />
+                <label class="lbcss" for="Input.Email">Email</label>
+                <ValidationMessage For="() => Input.Email" class="text-danger" />
+            </div>
+            
+            <div class="col-md-4 form-floating mb-3">
+                <InputText @bind-Value="Input.Gender" id="Input.Gender" class="form-control" autocomplete="gender" 
+                    aria-required="true" placeholder="Gender" />
+                <label class="lbcss" for="Input.Gender">gender</label>
+            </div>
+            
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.FirstName" id="Input.FirstName" class="form-control" autocomplete="firstname" 
+                    aria-required="true" placeholder="first name" />
+                <label class="lbcss" for="Input.FirstName">First Name</label>
+                <ValidationMessage For="() => Input.FirstName" class="text-danger" />
+            </div>
+            
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.LastName" id="Input.LastName" class="form-control" autocomplete="LastName"
+                           aria-required="true" placeholder="last name" />
+                <label class="lbcss" for="Input.LastName">Last Name</label>
+                <ValidationMessage For="() => Input.LastName" class="text-danger" />
+            </div>
+
+            <div class="form-floating mb-3">
+                <InputDate TValue="DateTime" @bind-Value="Input.BirthDate" id="Input.BirthDate" class="form-control" />
+                <label class="lbcss" for="Input.BirthDate">Birth Date</label>
+                <ValidationMessage For="() => Input.BirthDate" class="text-danger" />
+            </div>
+
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.PhoneNumber" id="Input.PhoneNumber" class="form-control" autocomplete="phonenumber"
+                           aria-required="true" placeholder="phone contact" />
+                <label class="lbcss" for="Input.PhoneNumber">Phone Contact No.</label>
+            </div>
+
+            <div class="form-floating mb-3">
+                <!-- Use a valid id (no dots) and explicit accept types -->
+                <InputFile OnChange="HandleFileWhenSelected" id="Input_ProfileImage" class="form-control" accept="image/jpeg,image/png,image/gif" />
+                <label class="lbcss" for="Input_ProfileImage">Image jpeg, gif max. 5MB</label>
+                <ValidationMessage For="() => Input.ProfileImage" class="text-danger" />
+            </div>
+                                    
+            <div class="form-floating mb-3">
+                <InputText type="password" @bind-Value="Input.Password" id="Input.Password" class="form-control" 
+                    autocomplete="new-password" aria-required="true" placeholder="password" />
+                <label class="lbcss" for="Input.Password">Password</label>
+                <ValidationMessage For="() => Input.Password" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText type="password" @bind-Value="Input.ConfirmPassword" id="Input.ConfirmPassword" class="form-control" 
+                    autocomplete="new-password" aria-required="true" placeholder="password" />
+                <label class="lbcss" for="Input.ConfirmPassword">Confirm Password</label>
+                <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
+            </div>
+            <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
+        </EditForm>
+    </div>
+    
+</div>
+
+@code {
+    private IEnumerable<IdentityError>? identityErrors;
+
+    [SupplyParameterFromForm]
+    private UserRegisteringModel Input { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}";
+
+    private byte[]? uploadedImage;
+
+    public async Task RegisterUser(EditContext editContext)
+    {
+        var user = CreateUser();
+
+        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+        var emailStore = GetEmailStore();
+        await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+        var result = await UserManager.CreateAsync(user, Input.Password);
+
+        if (!result.Succeeded)
+        {
+            identityErrors = result.Errors;
+            return;
+        }
+
+        Logger.LogInformation("User created a new account with password.");
+
+        var userId = await UserManager.GetUserIdAsync(user);
+        var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+        var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+            NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+            new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
+
+        await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
+
+        if (UserManager.Options.SignIn.RequireConfirmedAccount)
+        {
+            RedirectManager.RedirectTo(
+                "Account/RegisterConfirmation",
+                new() { ["email"] = Input.Email, ["returnUrl"] = ReturnUrl });
+        }
+
+        await SignInManager.SignInAsync(user, isPersistent: false);
+        RedirectManager.RedirectTo(ReturnUrl);
+    }
+
+    private ApplicationUser CreateUser()
+    {
+        try
+        {
+            var user = Activator.CreateInstance<ApplicationUser>();
+            user.FirstName = Input.FirstName;
+            user.LastName = Input.LastName;
+            user.DateOfBirth = Input.BirthDate;
+            user.PhoneNumber = Input.PhoneNumber;
+            user.ProfileImage = uploadedImage;
+            user.Gender = Input.Gender;
+            user.UserName = Input.Email;
+            user.ProfileImage = uploadedImage;
+
+            return user;
+        }
+        catch
+        {
+            var failMessage = $"Can't create an instance of '{nameof(ApplicationUser)}'. " +
+                $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor.";
+            
+            throw new InvalidOperationException(failMessage);
+        }
+    }
+
+    private IUserEmailStore<ApplicationUser> GetEmailStore()
+    {
+        if (!UserManager.SupportsUserEmail)
+        {
+            throw new NotSupportedException("The default UI requires a user store with email support.");
+        }
+        return (IUserEmailStore<ApplicationUser>)UserStore;
+    }
+
+    private async Task HandleFileWhenSelected(InputFileChangeEventArgs e)
+    {
+        // Use the IBrowserFile API (Size) rather than FileInfo(file.Name)
+        var file = e.File;
+        if (file is null)
+        {
+            return;
+        }
+
+        const long maxAllowedSize = 1024 * 1024 * 5; // 5 MB
+
+        if (file.Size == 0)
+        {
+            identityErrors = new[] { new IdentityError { Description = "Selected file is empty." } };
+            return;
+        }
+
+        if (file.Size > maxAllowedSize)
+        {
+            identityErrors = new[] { new IdentityError { Description = "File size exceeds the 5MB limit." } };
+            return;
+        }
+
+        try
+        {
+            using var stream = file.OpenReadStream(maxAllowedSize);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            uploadedImage = ms.ToArray();
+            // Optionally clear previous identity errors
+            identityErrors = null;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error reading uploaded image.");
+            identityErrors = new[] { new IdentityError { Description = "Failed to read the uploaded file." } };
+        }
+    }
+}
