@@ -1,7 +1,10 @@
+using FastEndpoints;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using System.Reflection;
+using TS.Personal.Security;
 using TS.Personal.Web.Components;
 using TS.Personal.Web.Components.Account;
 using TS.Personal.Web.Data;
@@ -13,14 +16,20 @@ var logger = Log.Logger = new LoggerConfiguration()
   .WriteTo.Console()
   .CreateLogger();
 
+logger.Information("Starting the TS Personal web host");
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddHttpClient();
+builder.Services.AddFastEndpoints();
+
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
-builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider, 
+    IdentityRevalidatingAuthenticationStateProvider>();
 
 builder.Services.AddAuthentication(options =>
     {
@@ -39,6 +48,11 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
+logger.Information("Setting up service modules");
+List<Assembly> mediatRAssemblies = [typeof(Program).Assembly];
+builder.Services.AddSecurityModuleServices(builder.Configuration, logger,  mediatRAssemblies);
+builder.Services.AddMediatR(cfg =>
+  cfg.RegisterServicesFromAssemblies(mediatRAssemblies.ToArray()));
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
 var app = builder.Build();
@@ -55,8 +69,11 @@ else
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+app.UseAuthentication()
+  .UseAuthorization();
 
+app.UseHttpsRedirection();
+app.UseFastEndpoints();
 
 app.UseAntiforgery();
 

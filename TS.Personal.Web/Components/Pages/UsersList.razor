@@ -1,0 +1,87 @@
+﻿@page "/users"
+@using MediatR
+@using TS.Personal.Core.Dtos
+@using TS.Personal.Web.UseCases
+@using TS.Personal.Web.ViewModels
+@attribute [StreamRendering]
+
+<PageTitle>User List</PageTitle>
+
+<h2>List of users</h2>
+
+@inject IMediator Mediator
+
+@if (!users.Any())
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th aria-label="Email">Email</th>
+                <th aria-label="FullName">FullName</th>
+                <th aria-label="Registered">Registered</th>
+                <th><span style="width:150px!important" /></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var person in users)
+            {
+                <tr>
+                    <td>@person.Id</td>
+                    <td>@person.Email</td>
+                    <td>@person.FullName</td>
+                    <td>@person.Registered</td>
+                    <td>
+                        <div class="col-md-2">
+                            <NavLink href="@($"/users/{person.Id}/profile")">View/Edit</NavLink>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+@code {
+
+    private List<UserTableVm> users = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await FetchingUsersList();
+                
+    }
+
+    private async Task FetchingUsersList()
+    {
+        var command = new FetchingUsersRequest();
+                
+        var result = await Mediator.Send(command);
+        foreach (var user in result.Users)
+        {
+            users.Add(new UserTableVm
+            {
+                Id = user.Id,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Registered = user.RegisteredDate
+            });
+            StateHasChanged(); // Notify the component to re-render after each addition
+        }
+
+    }
+
+    private class WeatherForecast
+    {
+        public DateOnly Date { get; set; }
+        public int TemperatureC { get; set; }
+        public string? Summary { get; set; }
+        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    }
+}

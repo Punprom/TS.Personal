@@ -1,0 +1,8 @@
+@web_BaseUrl = https://localhost:7261
+
+GET {{web_BaseUrl}}/api/users
+Accept: application/json
+
+####
+@userId = 1664bd78-6404-44f3-a2ba-66118f5c9c4c
+GET {{web_BaseUrl}}/api/{{userId}}/users

@@ -9,16 +9,20 @@
 
   <ItemGroup>
     <PackageReference Include="FastEndpoints" Version="7.1.1" />
+    <PackageReference Include="FastEndpoints.Security" Version="7.1.1" />
+    <PackageReference Include="MediatR" Version="13.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.11" />
     <PackageReference Include="Serilog" Version="4.3.0" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Extensions\" />
+    <ProjectReference Include="..\TS.Personal.Security\TS.Personal.Security.csproj" />
   </ItemGroup>
 
 </Project>
