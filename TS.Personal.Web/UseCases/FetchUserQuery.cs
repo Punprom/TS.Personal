@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Components;
 using TS.Personal.Core.Dtos;
+using TS.Personal.Security.Endpoints;
 
 namespace TS.Personal.Web.UseCases;
 
@@ -26,12 +27,12 @@ internal class FetchUserQuery : IRequestHandler<GetUserRequest, GetUserResponse>
         using var client = _httpFactory.CreateClient();
         client.BaseAddress = new Uri(baseUrl);
 
-        var response = await client.GetFromJsonAsync<UserDto>($"api/users/{request.UserId}/users", ct);
+        var response = await client.GetFromJsonAsync<FetchUserResponse>($"api/users/{request.UserId}/profile", ct);
         if (response == null)
         {
             return new GetUserResponse(null);
         }
 
-        return new GetUserResponse(response);
+        return new GetUserResponse(response.User);
     }
 }

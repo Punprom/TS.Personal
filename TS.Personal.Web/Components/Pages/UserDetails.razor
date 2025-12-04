@@ -1,0 +1,135 @@
+﻿@page "/users/profile/{UserId}"
+@using MediatR
+@using TS.Personal.Web.UseCases
+@using TS.Personal.Web.ViewModels
+@rendermode InteractiveServer
+
+@inject IMediator Mediator
+
+<PageTitle>User Profile</PageTitle>
+
+<h1>User Profile</h1>
+
+<div class="row mt-3">
+    <EditForm Model="UserProfile" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="UpdateUser"
+              FormName="EditProfile">
+        <div class="col-md-6 mt-3">
+            <h2>Profile Information</h2>
+        </div>
+        <div class="mb-3" />
+        <div class="col-md-6">
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="UserProfile.Email" id="Email" class="form-control"
+                           autocomplete="firstname" aria-required="true" placeholder="email" />
+                <label class="lbcss" for="Email">email</label>
+                <ValidationMessage For="() => UserProfile.Email" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="UserProfile.FirstName" id="FirstName" class="form-control"
+                           autocomplete="firstname" aria-required="true" placeholder="first name" />
+                <label class="lbcss" for="FirstName">First Name</label>
+                <ValidationMessage For="() => UserProfile.FirstName" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="UserProfile.LastName" id="LastName" class="form-control"
+                           autocomplete="LastName" aria-required="true" placeholder="last name" />
+                <label class="lbcss" for="LastName">Last Name</label>
+                <ValidationMessage For="() => UserProfile.LastName" class="text-danger" />
+            </div>
+
+            <div class="form-floating mb-3">
+                <InputDate TValue="DateTime" @bind-Value="UserProfile.DateOfBirth" id="UserProfile.DateOfBirth" class="form-control" />
+                <label class="lbcss" for="UserProfile.DateOfBirth">Date of Birth</label>
+                <ValidationMessage For="() => UserProfile.DateOfBirth" class="text-danger" />
+            </div>
+
+            <div class="form-floating mb-3 col-md-5 sm-5">
+                <InputText @bind-Value="UserProfile.Gender" id="PhoneNumber" class="form-control"
+                           autocomplete="gender" aria-required="true" />
+                <label class="lbcss" for="Gender">Gender</label>
+            </div>
+
+            <div class="form-floating mb-3 col-md-5 sm-5">
+                <InputText @bind-Value="UserProfile.PhoneNumber" id="PhoneNumber" class="form-control"
+                           autocomplete="phoneNumber" aria-required="true" />
+                <label class="lbcss" for="PhoneNumber">Phone Number</label>
+            </div>
+        </div>
+
+
+    </EditForm>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <h3>Profile Avatar/Photo</h3>
+        <div class="col-md-12 col-sm-12 mt-3 mb-3">
+            <div class="col-md-5 sm-5">
+                <img src="/img/blank_img.jpg" class="rounded mx-auto d-block" alt="Empty Image">
+            </div>
+            <div class="form-floating mb-3 mt-2 col-md-7">
+                <InputFile OnChange="OnFileSelected" id="Input_ProfileImage" class="form-control" accept="image/jpeg,image/png,image/gif" />
+                <label class="lbcss" for="Input_ProfileImage">Image jpeg, gif max. 5MB</label>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+@code {
+
+    [Parameter]
+    public string UserId { get; set; }
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    private UserProfileVm UserProfile = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var command = new GetUserRequest(UserId);
+        var result = await Mediator.Send(command);
+
+        if (result is not null)
+        {
+            var vm = new UserProfileVm
+            {
+                UserId = result.Profile.Id,
+                Email = result.Profile.Email,
+                Gender = result.Profile.Gender,
+                FirstName = result.Profile.FirstName,
+                LastName = result.Profile.LastName,
+                PhoneNumber = result.Profile.PhoneNumber,
+                RegisteredDate = result.Profile.RegisteredDate
+
+            };
+            UserProfile = vm;
+        }
+
+    }
+
+    private async Task OnFileSelected()
+    {
+        
+    }
+
+    private async Task UpdateUser(EditContext editContext)
+    {
+        /*
+        var command = new UpdateUserCommand(userProfile);
+        var result = await Mediator.Send(command);
+
+        if (result.Succeeded)
+        {
+            // Handle success (e.g., show a success message or redirect)
+        }
+        else
+        {
+            // Handle failure (e.g., show error messages)
+        }
+        */
+    }
+
+}

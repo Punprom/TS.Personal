@@ -5,4 +5,4 @@ Accept: application/json
 
 ####
 @userId = 1664bd78-6404-44f3-a2ba-66118f5c9c4c
-GET {{web_BaseUrl}}/api/{{userId}}/users
+GET {{web_BaseUrl}}/api/users/{{userId}}/profile

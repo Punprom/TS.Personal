@@ -5,7 +5,7 @@ using TS.Personal.Core.Interfaces;
 namespace TS.Personal.Security.Endpoints;
 
 internal record FetchUserRequest(string UserId);
-internal record FetchUserResponse(UserDto User);
+public record FetchUserResponse(UserDto User);
 
 internal class FetchUser : Endpoint<FetchUserRequest, FetchUserResponse>
 {
@@ -18,7 +18,7 @@ internal class FetchUser : Endpoint<FetchUserRequest, FetchUserResponse>
 
     public override void Configure()
     {
-        Get("api/{userId}/users");
+        Get("api/users/{userId}/profile");
         AllowAnonymous();
     }
 
