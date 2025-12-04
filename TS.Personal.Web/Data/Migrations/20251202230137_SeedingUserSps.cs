@@ -33,8 +33,7 @@ namespace TS.Personal.Web.Migrations
                 @lastName nvarchar(30),
                 @gender nvarchar(10), 
                 @dateOfBirth datetime2,
-                @phoneNumber nvarchar(30),
-                @profileImage varbinary(MAX)
+                @phoneNumber nvarchar(30)
                 AS
                 BEGIN
 
@@ -47,9 +46,8 @@ namespace TS.Personal.Web.Migrations
 		                PhoneNumberConfirmed = CASE 
 								                WHEN [PhoneNumber] IS NOT NULL THEN 1
 								                ELSE 0
-							                   END,
-		                ProfileImage = @profileImage
-	                WHERE Id = @userId
+							                   END
+		           WHERE Id = @userId
                 END
                GO
             ";

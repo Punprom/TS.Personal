@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using System.Data;
+using System.Data.Common;
 using TS.Personal.Core.Dtos;
 using TS.Personal.Core.Interfaces;
 
@@ -40,6 +41,26 @@ namespace TS.Personal.Security.Services
             return result;
         }
 
+        public async Task<byte[]?> GetUserProfileImageAsync(string userId)
+        {
+            var parameters = new DynamicParameters();
+            parameters.Add("@uid", userId);
+
+            var sqlCmd = @"SELECT ProfileImage 
+                           FROM [dbo].[AspNetUsers] 
+                           WHERE Id = @uid";
+            
+            using var connection = _connectionFactory();
+            switch (connection)
+            {
+                case DbConnection dbConnection:
+                    return await dbConnection.QueryFirstOrDefaultAsync<byte[]>(sqlCmd, parameters);
+                default:
+                    connection.Open();
+                    return connection.QueryFirstOrDefault<byte[]>(sqlCmd, parameters);
+            }
+        }
+
         public async Task UpdateUserProfileAsync(UserDto user)
         {
             var parameters = new DynamicParameters();
@@ -49,14 +70,38 @@ namespace TS.Personal.Security.Services
             parameters.Add("@gender", user.Gender);
             parameters.Add("@dateOfBirth", user.DateOfBirth);
             parameters.Add("@phoneNumber", user.PhoneNumber);
-            //parameters.Add("@profileImage", user.ProfileImage);
-
+            
             var sqlCmd = @"EXEC [dbo].[UpdateUserProfile] @userId, @firstName, @lastName, 
                             @gender, @dateOfBirth, @phoneNumber";
             using var connection = _connectionFactory();
-            connection.Open(); // Use synchronous Open() since IDbConnection does not have OpenAsync
+            connection.Open(); 
 
             await connection.ExecuteAsync(sqlCmd, parameters);
+        }
+
+        public async Task UpdateUserProfileImageAsync(string userId, byte[]? profileImage)
+        {
+            var parameters = new DynamicParameters();
+            parameters.Add("@userId", userId);
+            parameters.Add("@img", profileImage);
+
+            var sqlCmd = @"UPDATE [dbo].[AspNetUsers]
+	                         SET ProfileImage = @img	 
+	                       WHERE Id = @userId";
+
+            using var connection = _connectionFactory();
+
+            if (connection is DbConnection dbConnection)
+            {
+                await dbConnection.OpenAsync();
+            }
+            else
+            {
+                connection.Open();
+            }
+
+            // Await the ExecuteAsync while the connection is still open and in scope.
+            await connection.ExecuteAsync(new CommandDefinition(sqlCmd, parameters));
         }
     }
 }

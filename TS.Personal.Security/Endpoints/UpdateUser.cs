@@ -5,7 +5,7 @@ using TS.Personal.Core.Interfaces;
 
 namespace TS.Personal.Security.Endpoints;
 
-internal record UpdateUserRequest(UserDto Person);
+internal record UpdateUserRequest(UserDto User);
  
 internal class UpdateUser : Endpoint<UpdateUserRequest>
 {
@@ -19,14 +19,14 @@ internal class UpdateUser : Endpoint<UpdateUserRequest>
 
     public override void Configure()
     {
-        Put("api/users/{UserId}");
+        Put("api/users");
         AllowAnonymous();
     }
 
     public override async Task HandleAsync(UpdateUserRequest request, CancellationToken ct)
     {
-        //_logger.Information("Updating user profile for UserId: {UserId}", request.Person.Id);
-         await _service.UpdateUserProfileAsync(request.Person);
+        //_logger.Information("Updating user profile for UserId: {UserId}", request.User.Id);
+         await _service.UpdateUserProfileAsync(request.User);
 
         await Send.OkAsync(cancellation: ct);
     }

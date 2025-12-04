@@ -14,3 +14,4 @@ public class UserDto
     public DateTime RegisteredDate { get; set; }
 
 }
+

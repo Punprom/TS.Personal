@@ -10,4 +10,7 @@ public interface IUserService
 
     Task UpdateUserProfileAsync(UserDto user);
 
+    Task<byte[]?> GetUserProfileImageAsync(string userId);
+
+    Task UpdateUserProfileImageAsync(string userId, byte[]? profileImage);
 }
