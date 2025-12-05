@@ -7,7 +7,10 @@
 @using TS.Personal.Web.UseCases
 @using TS.Personal.Web.ViewModels
 @using System.IO
+@using Microsoft.AspNetCore.Authorization
 @rendermode InteractiveServer
+
+@attribute [Authorize]
 
 @inject IMediator Mediator
 @inject IWebHostEnvironment Env

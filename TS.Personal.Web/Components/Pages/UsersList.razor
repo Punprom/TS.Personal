@@ -1,9 +1,13 @@
 ﻿@page "/users"
+
 @using MediatR
+@using Microsoft.AspNetCore.Authorization
 @using TS.Personal.Core.Dtos
 @using TS.Personal.Web.UseCases
 @using TS.Personal.Web.ViewModels
 @attribute [StreamRendering]
+@attribute [Authorize]
+
 
 <PageTitle>User List</PageTitle>
 
